@@ -3,4 +3,13 @@
 *.iml
 *.class
 *Test.java
+# 忽略特定的配置文件（推荐，精准控制）
+sky-server/src/main/resources/application-dev.yml
+
+# 或忽略所有环境配置文件（如-dev、-prod后缀）
+sky-server/src/main/resources/application-*.yml
+
+# 或忽略所有.yml配置文件（如果不需要提交任何.yml）
+*.yml
+*.yaml
 **/test/
