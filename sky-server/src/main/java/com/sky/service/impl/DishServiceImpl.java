@@ -1,6 +1,7 @@
 package com.sky.service.impl;
 
 
+import com.fasterxml.jackson.databind.util.BeanUtil;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.sky.constant.MessageConstant;
@@ -123,6 +124,63 @@ public class DishServiceImpl implements DishService {
         //根据菜品id集合批量删除菜品关联的口味数据
         dishFlavorMapper.deleteByDishIds(ids);
 
+    }
+
+
+
+     /**
+      * 根据id查询菜品和对应的口味数据
+      * @param id
+      * @return
+      */
+    public DishVO getByIdWithFlavor(Long id) {
+
+        //根据id查询菜品数据
+        Dish dish = dishMapper.getById(id);
+
+        //根据菜品id查询口味数据
+        List<DishFlavor> flavors = dishFlavorMapper.getByDishId(id);
+
+        //将查询到的数据封装到VO
+        DishVO dishVO = new DishVO();
+        BeanUtils.copyProperties(dish,dishVO);
+        dishVO.setFlavors(flavors);
+
+
+        return dishVO;
+    }
+
+
+
+
+    /**
+     * 修改菜品和口味
+     * @param dishDTO
+     */
+    public void updateWithFlavor(DishDTO dishDTO) {
+
+        Dish dish = new Dish();
+        BeanUtils.copyProperties(dishDTO,dish);
+        //修改菜品表基本信息
+        dishMapper.update(dish);
+
+
+        //这里修改口味表有多种情况，可能删除、新增、修改
+        //直接采用全部删除再插入的操作
+        //将多条sql统一为两条sql语句
+
+        //删除菜品关联的口味数据
+        dishFlavorMapper.deleteByDishId(dishDTO.getId());
+
+        //新增菜品关联的口味数据
+        List<DishFlavor> flavors = dishDTO.getFlavors();
+        if (flavors != null && flavors.size() > 0) {
+            flavors.forEach(dishFlavor -> {
+                dishFlavor.setDishId(dishDTO.getId());
+            });
+            //批量插入数据，不用遍历
+            dishFlavorMapper.insertBatch(flavors);
+        }
     }
 
 
