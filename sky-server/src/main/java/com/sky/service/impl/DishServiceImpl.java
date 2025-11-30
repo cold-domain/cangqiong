@@ -184,4 +184,24 @@ public class DishServiceImpl implements DishService {
     }
 
 
+
+    /**
+     * 根据分类id查询菜品
+     * @param categoryId
+     * @return
+     */
+    public List<Dish> list(Long categoryId){
+        /*//根据分类id查询菜品
+        List<Dish> dishes = dishMapper.list(categoryId);
+        return dishes;*/
+        /*此处错误的原因是没有考虑到套餐只能加入起售中的菜品
+                未起售的菜品不可添加，需要排除掉*/
+
+        //参考答案：
+        Dish dish = Dish.builder()
+                .categoryId(categoryId)
+                .status(StatusConstant.ENABLE)
+                .build();
+        return dishMapper.list(dish);
+    }
 }
