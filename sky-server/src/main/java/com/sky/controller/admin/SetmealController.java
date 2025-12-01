@@ -88,4 +88,13 @@ public class SetmealController {
         setMealService.update(setmealDTO);
         return Result.success();
     }
+
+
+    @PostMapping("/status/{status}")
+    @ApiOperation("启动或停用套餐")
+    public Result StartOrStop(@PathVariable Integer status, Long id){
+        log.info("启用或停用套餐:{}",status);
+        setMealService.StartOrStop(status,id);
+        return Result.success();
+    }
 }
