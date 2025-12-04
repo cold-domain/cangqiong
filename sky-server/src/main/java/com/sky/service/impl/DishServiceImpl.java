@@ -208,6 +208,16 @@ public class DishServiceImpl implements DishService {
     }
 
 
+    public void StartOrStop(Integer status, Long dishId) {
+        //根据id修改菜品状态
+        Dish dish = Dish.builder()
+                .status(status)
+                .id(dishId)
+                .build();
+        dishMapper.update(dish);
+    }
+
+
 
     /**
      * 条件查询菜品和口味
