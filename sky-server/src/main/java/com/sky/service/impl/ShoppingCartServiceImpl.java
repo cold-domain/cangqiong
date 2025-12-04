@@ -89,6 +89,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
         //获取当前用户id
         Long userId = BaseContext.getCurrentId();
 
+        //构造查询参数
         ShoppingCart shoppingCart = ShoppingCart.builder()
                 .userId(userId)
                 .build();
@@ -96,5 +97,17 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
         List<ShoppingCart> list = shoppingCartMapper.list(shoppingCart);
 
         return list;
+    }
+
+
+
+     /**
+      * 清空购物车
+      */
+    public void cleanShoppingCart(){
+        //获取当前用户id
+        Long userId = BaseContext.getCurrentId();
+
+        shoppingCartMapper.deleteByUserId(userId);
     }
 }
