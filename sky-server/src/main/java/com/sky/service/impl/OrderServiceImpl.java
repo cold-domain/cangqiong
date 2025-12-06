@@ -195,7 +195,7 @@ public class OrderServiceImpl implements OrderService {
      * @return
      */
     public PageResult pageQuery4User(int pageNum, int pageSize, Integer status) {
-        //查询订单，再查询明细
+        //查询订单，再查询明细，展示菜品及价格等信息
 
         //订单表包含订单详细表，故而此时订单详细表为订单表的一个属性
         //通过订单id查询对应的订单详情
@@ -234,5 +234,29 @@ public class OrderServiceImpl implements OrderService {
         }
 
         return new PageResult(page.getTotal(),list);
+    }
+
+
+
+    /**
+     * 查询订单详情
+     * @param orderId
+     * @return
+     */
+    public OrderVO details(Long orderId){
+        //查两张表，一张订单表，一张订单详细表，之后将其封装到VO对象中进行返回即可
+
+        //查订单表，1项
+        Orders orders = orderMapper.getById(orderId);
+
+        //查订单详细表，n项
+        List<OrderDetail> orderDetails = orderDetailMapper.getByOrderId(orderId);
+
+        //封装VO对象
+        OrderVO orderVO = new OrderVO();
+        BeanUtils.copyProperties(orders,orderVO);
+        orderVO.setOrderDetailList(orderDetails);
+
+        return orderVO;
     }
 }
