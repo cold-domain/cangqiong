@@ -30,6 +30,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -307,6 +308,36 @@ public class OrderServiceImpl implements OrderService {
         orders.setCancelTime(LocalDateTime.now());
 
         orderMapper.update(orders);
+    }
+
+
+    /**
+     * 再来一单
+     * @param orderId
+     */
+    public void repetition(Long orderId) {
+        //1.查询当前用户id
+        Long userId = BaseContext.getCurrentId();
+
+        //2.查询订单详情
+        List<OrderDetail> orderDetailList = orderDetailMapper.getByOrderId(orderId);
+
+        //3.订单详情对象转为购物车对象
+        List<ShoppingCart> shoppingCartList = orderDetailList.stream().map(orderDetail -> {
+            //构建新的购物车对象
+            ShoppingCart shoppingCart = new ShoppingCart();
+
+            //复制属性(除去id项)，设置好字段
+            BeanUtils.copyProperties(orderDetail,shoppingCart,"id");
+            shoppingCart.setUserId(userId);
+            shoppingCart.setCreateTime(LocalDateTime.now());
+
+            return shoppingCart;
+        }).collect(Collectors.toList());
+
+
+        //4.购物车对象批量添加
+        shoppingCartMapper.insertBatch(shoppingCartList);
     }
 
 }
