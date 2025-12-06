@@ -105,6 +105,11 @@ public class OrderController {
 
 
 
+    /**
+     * 商家取消订单
+     * @param ordersCancelDTO
+     * @return
+     */
     @PutMapping("/cancel")
     @ApiOperation("商家取消订单")
     public Result cancel(@RequestBody OrdersCancelDTO ordersCancelDTO) throws Exception{
@@ -129,6 +134,16 @@ public class OrderController {
         orderService.delivery(id);
 
         return Result.success();
+    }
 
+
+
+
+    @PutMapping("/complete/{id}")
+    @ApiOperation("完成订单")
+    public Result complete(@PathVariable Long id){
+        log.info("完成订单:{}", id);
+        orderService.complete(id);
+        return Result.success();
     }
 }
