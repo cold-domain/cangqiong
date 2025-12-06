@@ -490,4 +490,25 @@ public class OrderServiceImpl implements OrderService {
 
         orderMapper.update(ordersDB);
     }
+
+
+
+    public void cancel(OrdersCancelDTO ordersCancelDTO) {
+
+        //查询订单是否存在
+        Orders orders = orderMapper.getById(ordersCancelDTO.getId());
+
+        if(orders == null){
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
+
+        //创建订单修改对象
+        Orders ordersDB = new Orders();
+        ordersDB.setId(orders.getId());
+        ordersDB.setStatus(Orders.CANCELLED);
+        ordersDB.setCancelReason(ordersCancelDTO.getCancelReason());
+        ordersDB.setCancelTime(LocalDateTime.now());
+
+        orderMapper.update(ordersDB);
+    }
 }
