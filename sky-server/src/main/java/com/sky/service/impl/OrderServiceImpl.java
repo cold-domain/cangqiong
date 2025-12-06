@@ -340,4 +340,73 @@ public class OrderServiceImpl implements OrderService {
         shoppingCartMapper.insertBatch(shoppingCartList);
     }
 
+
+
+     /**
+      * 管理员端根据条件查询订单
+      * @param ordersPageQueryDTO
+      * @return
+      */
+    public PageResult conditionSearch(OrdersPageQueryDTO ordersPageQueryDTO) {
+        //分页查询
+        PageHelper.startPage(ordersPageQueryDTO.getPage(),ordersPageQueryDTO.getPageSize());
+
+        Page<Orders> page = orderMapper.pageQuery(ordersPageQueryDTO);
+
+        //部分订单状态，需要额外返回订单菜品信息，将Orders转化为OrderVO
+        List<OrderVO> orderVOList = getOrderVOList(page);
+
+        return new PageResult(page.getTotal(), orderVOList);
+    }
+
+
+    /**
+     * 将Orders对象列表转换为OrderVO对象列表
+     * @param page 包含Orders对象的分页结果
+     * @return 包含OrderVO对象的列表
+     */
+    public List<OrderVO> getOrderVOList(Page<Orders> page) {
+        List<OrderVO> orderVOList = new ArrayList<>();
+
+        List<Orders> ordersList = page.getResult();
+        for(Orders orders : ordersList){
+            //新建VO对象
+            OrderVO orderVO = new OrderVO();
+
+            //复制属性到VO对象
+            BeanUtils.copyProperties(orders,orderVO);
+
+            //获取菜品信息字符串
+            String orderDishes = getOrderDishesStr(orders);
+
+            //设置VO对象的orderDishes属性
+            orderVO.setOrderDishes(orderDishes);
+
+            //将VO对象添加到列表
+            orderVOList.add(orderVO);
+        }
+
+        return orderVOList;
+    }
+
+
+    /**
+     * 获取订单菜品信息字符串
+     * @param orders 订单对象
+     * @return 订单菜品信息字符串（格式：宫保鸡丁*3；）
+     */
+    public String getOrderDishesStr(Orders orders){
+        //查询订单详情
+        List<OrderDetail> orderDetailList = orderDetailMapper.getByOrderId(orders.getId());
+
+        // 将每一条订单菜品信息拼接为字符串（格式：宫保鸡丁*3；）
+        List<String> orderDishesList = orderDetailList.stream()
+                .map(orderDetail ->{
+            String orderDish = orderDetail.getName() + "*" + orderDetail.getNumber();
+            return orderDish;
+        }).collect(Collectors.toList());
+
+
+        return String.join(",",orderDishesList);
+    }
 }
