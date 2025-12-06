@@ -511,4 +511,23 @@ public class OrderServiceImpl implements OrderService {
 
         orderMapper.update(ordersDB);
     }
+
+
+    public void delivery(Long orderId){
+
+        //查询订单存在以及其状态是否为“待派送”
+        Orders orders = orderMapper.getById(orderId);
+
+        if(orders == null || !orders.getStatus().equals(Orders.CONFIRMED)){
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
+        }
+
+
+        //修改订单状态
+        Orders orderTemp = new Orders();
+        orderTemp.setId(orderId);
+        orderTemp.setStatus(Orders.DELIVERY_IN_PROGRESS);
+
+        orderMapper.update(orderTemp);
+    }
 }
