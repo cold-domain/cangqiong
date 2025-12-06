@@ -5,10 +5,7 @@ import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.sky.constant.MessageConstant;
 import com.sky.context.BaseContext;
-import com.sky.dto.OrdersConfirmDTO;
-import com.sky.dto.OrdersPageQueryDTO;
-import com.sky.dto.OrdersPaymentDTO;
-import com.sky.dto.OrdersSubmitDTO;
+import com.sky.dto.*;
 import com.sky.entity.*;
 import com.sky.exception.AddressBookBusinessException;
 import com.sky.exception.OrderBusinessException;
@@ -294,8 +291,12 @@ public class OrderServiceImpl implements OrderService {
         //待接单状态下取消订单，需要给用户退款
         if(orders.getStatus().equals(Orders.TO_BE_CONFIRMED)){
             //退款代码
-            //xxx
-            //xxx
+            //调用微信支付退款接口
+            //  weChatPayUtil.refund(
+            //          ordersDB.getNumber(), //商户订单号
+            //          ordersDB.getNumber(), //商户退款单号
+            //          new BigDecimal(0.01),//退款金额，单位 元
+            //          new BigDecimal(0.01));//原订单金额
 
             //修改订单支付状态为退款
             orders.setPayStatus(Orders.REFUND);
@@ -448,5 +449,45 @@ public class OrderServiceImpl implements OrderService {
 
         //修改订单状态
         orderMapper.update(orders);
+    }
+
+
+
+    /**
+     * 商家拒绝订单
+     * @param ordersRejectionDTO
+     */
+    public void rejection(OrdersRejectionDTO ordersRejectionDTO) {
+        //查询订单状态
+        Orders orders = orderMapper.getById(ordersRejectionDTO.getId());
+
+        //判断订单是否存在且订单状态是否为“待接单”，是才可以取消
+        if(orders == null || !orders.getStatus().equals(Orders.TO_BE_CONFIRMED)){
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
+        }
+
+        //若订单已完成支付，需要退款
+        Integer payStatus = orders.getPayStatus();
+        if(payStatus == Orders.PAID){
+            //调用退款代码
+            //用户已支付，需要退款
+            /*String refund = weChatPayUtil.refund(
+                    ordersDB.getNumber(),
+                    ordersDB.getNumber(),
+                    new BigDecimal(0.01),
+                    new BigDecimal(0.01));
+                    */
+
+            log.info("用户申请退款");
+        }
+
+        //更新订单状态为“已取消”及相关字段
+        Orders ordersDB = new Orders();
+        ordersDB.setId(orders.getId());
+        ordersDB.setStatus(Orders.CANCELLED);
+        ordersDB.setRejectionReason(ordersRejectionDTO.getRejectionReason());
+        ordersDB.setCancelTime(LocalDateTime.now());
+
+        orderMapper.update(ordersDB);
     }
 }
