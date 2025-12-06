@@ -1,8 +1,11 @@
 package com.sky.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
+import com.github.pagehelper.Page;
+import com.github.pagehelper.PageHelper;
 import com.sky.constant.MessageConstant;
 import com.sky.context.BaseContext;
+import com.sky.dto.OrdersPageQueryDTO;
 import com.sky.dto.OrdersPaymentDTO;
 import com.sky.dto.OrdersSubmitDTO;
 import com.sky.entity.*;
@@ -10,13 +13,16 @@ import com.sky.exception.AddressBookBusinessException;
 import com.sky.exception.OrderBusinessException;
 import com.sky.exception.ShoppingCartBusinessException;
 import com.sky.mapper.*;
+import com.sky.result.PageResult;
 import com.sky.service.OrderService;
 import com.sky.utils.WeChatPayUtil;
 import com.sky.vo.OrderPaymentVO;
 import com.sky.vo.OrderSubmitVO;
+import com.sky.vo.OrderVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -46,6 +52,8 @@ public class OrderServiceImpl implements OrderService {
 
     @Autowired
     private UserMapper userMapper;
+    @Autowired
+    private OrderService orderService;
 
     /**
      * 用户下单
@@ -174,5 +182,57 @@ public class OrderServiceImpl implements OrderService {
                 .build();
 
         orderMapper.update(orders);
+    }
+
+
+
+
+    /**
+     * 查询历史订单
+     * @param pageNum
+     * @param pageSize
+     * @param status
+     * @return
+     */
+    public PageResult pageQuery4User(int pageNum, int pageSize, Integer status) {
+        //查询订单，再查询明细
+
+        //订单表包含订单详细表，故而此时订单详细表为订单表的一个属性
+        //通过订单id查询对应的订单详情
+
+        //设置分页
+        PageHelper.startPage(pageNum,pageSize);
+
+        //设置查询DTO
+        OrdersPageQueryDTO ordersPageQueryDTO = new OrdersPageQueryDTO();
+        ordersPageQueryDTO.setStatus(status);
+        Long userId = BaseContext.getCurrentId();
+        ordersPageQueryDTO.setUserId(userId);
+
+        //分页查询
+        Page<Orders> page = orderMapper.pageQuery(ordersPageQueryDTO);
+
+
+        //查询订单明细，封装成VO集合返回
+        List<OrderVO> list = new ArrayList<>();
+        if(page!=null && page.size()>0){
+            for (Orders orders : page) {
+                //取订单id，此处需要在mapper中设置返回主键
+                Long ordersId = orders.getId();
+
+                //查订单明细
+                List<OrderDetail> orderDetailList = orderDetailMapper.getByOrderId(ordersId);
+
+                //封装VO
+                OrderVO orderVO = new OrderVO();
+                BeanUtils.copyProperties(orders,orderVO);
+                orderVO.setOrderDetailList(orderDetailList);
+
+                //加入VO集合
+                list.add(orderVO);
+            }
+        }
+
+        return new PageResult(page.getTotal(),list);
     }
 }
