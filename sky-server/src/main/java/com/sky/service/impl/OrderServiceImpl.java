@@ -259,4 +259,54 @@ public class OrderServiceImpl implements OrderService {
 
         return orderVO;
     }
+
+
+    /**
+     * 用户取消订单
+     * @param orderId
+     */
+    public void userCancelById(Long orderId) {
+
+        //1.获取订单数据及订单状态
+        Orders orders = orderMapper.getById(orderId);
+
+        //判断订单是否存在
+        if(orders == null)
+        {
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
+
+        //获取订单详情
+        Integer status = orders.getStatus();
+
+        //2.判断订单的情况，根据不同状态进行处理
+        //商家已接单状态和派送中状态，用户取消订单需电话沟通商家
+        if(status > 2){
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
+        }
+
+        Orders orderTemp = new Orders();
+        orderTemp.setId(orders.getId());
+
+        //待接单状态下取消订单，需要给用户退款
+        if(orders.getStatus().equals(Orders.TO_BE_CONFIRMED)){
+            //退款代码
+            //xxx
+            //xxx
+
+            //修改订单支付状态为退款
+            orders.setPayStatus(Orders.REFUND);
+        }
+
+
+
+        //待支付和待接单状态下，用户可直接取消订单
+        //3.取消订单后需要将订单状态修改为“已取消”
+        orders.setStatus(Orders.CANCELLED);
+        orders.setCancelReason("用户取消订单");
+        orders.setCancelTime(LocalDateTime.now());
+
+        orderMapper.update(orders);
+    }
+
 }
