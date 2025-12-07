@@ -570,6 +570,10 @@ public class OrderServiceImpl implements OrderService {
     }
 
 
+     /**
+      * 完成订单
+      * @param orderId
+      */
     public void complete(Long orderId){
 
         //查询订单是否存在及状态是否为“派送中”
@@ -652,5 +656,31 @@ public class OrderServiceImpl implements OrderService {
             //配送距离超过5000米
             throw new OrderBusinessException("超出配送范围");
         }
+    }
+
+
+    /**
+     * 催单
+     * @param orderId
+     */
+    public void reminder(Long orderId){
+        //查询订单是否存在
+        Orders orders = orderMapper.getById(orderId);
+
+        if(orders == null){
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
+        }
+
+
+        //给浏览器发送催单消息
+        //构造json消息参数
+        Map map = new HashMap();
+        map.put("type",2);          //1表示来单提醒 2表示客户催单
+        map.put("orderId",orderId);
+        map.put("content","订单号"+orders.getNumber());
+
+        String json = JSON.toJSONString(map);
+
+        webSocketServer.sendToAllClient(json);
     }
 }
